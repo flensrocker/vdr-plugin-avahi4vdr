@@ -8,6 +8,7 @@
 
 #include "avahi-browser.h"
 #include "avahi-client.h"
+#include "avahi-helper.h"
 #include "avahi-service.h"
 
 #include <vdr/plugin.h>
@@ -151,19 +152,31 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
   if ((Command == NULL) || (Option == NULL))
      return NULL;
 
-  cString option = Option;
+  cAvahiHelper options(Option);
 
   if (strcmp(Command, "CreateService") == 0) {
-     const char *caller = NULL;
-     const char *name = NULL;
+     const char *caller = options.Get("caller");
+     const char *name = options.Get("name");
      AvahiProtocol protocol = AVAHI_PROTO_UNSPEC;
-     const char *type = NULL;
+     const char *type = options.Get("type");
      int port = -1;
      int subtypes_len = 0;
      const char **subtypes = NULL;
      int txts_len = 0;
      const char **txts = NULL;
 
+     const char *tmp = options.Get("protocol");
+     if (tmp != NULL) {
+        if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET)) == 0)
+           protocol = AVAHI_PROTO_INET;
+        else if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET6)) == 0)
+           protocol = AVAHI_PROTO_INET6;
+        }
+
+     tmp = options.Get("port");
+     if ((tmp != NULL) && isnumber(tmp))
+        port = atoi(tmp);
+        
      if (name == NULL) {
         ReplyCode = 501;
         return "error=missing service name";
@@ -182,7 +195,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteService") == 0) {
-     const char *id = NULL;
+     const char *id = options.Get("id");
 
      if (id == NULL) {
         ReplyCode = 501;
@@ -191,13 +204,25 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
 
      ReplyCode = 900;
      AvahiClient()->DeleteService(id);
-     return cString::sprintf("deleted service with id %s", id);
+     return cString::sprintf("message=deleted service with id %s", id);
      }
   else if (strcmp(Command, "CreateBrowser") == 0) {
-     const char *caller = NULL;
+     const char *caller = options.Get("caller");
      AvahiProtocol protocol = AVAHI_PROTO_UNSPEC;
-     const char *type = NULL;
+     const char *type = options.Get("type");
      bool ignore_local = false;
+
+     const char *tmp = options.Get("protocol");
+     if (tmp != NULL) {
+        if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET)) == 0)
+           protocol = AVAHI_PROTO_INET;
+        else if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET6)) == 0)
+           protocol = AVAHI_PROTO_INET6;
+        }
+
+     tmp = options.Get("ignore_local");
+     if ((tmp != NULL) && (strcmp(tmp, "true") == 0))
+        ignore_local = true;
 
      if (caller == NULL) {
         ReplyCode = 501;
@@ -213,7 +238,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteBrowser") == 0) {
-     const char *id = NULL;
+     const char *id = options.Get("id");
 
      if (id == NULL) {
         ReplyCode = 501;
@@ -222,7 +247,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
 
      ReplyCode = 900;
      AvahiClient()->DeleteBrowser(id);
-     return cString::sprintf("deleted browser with id %s", id);
+     return cString::sprintf("message=deleted browser with id %s", id);
      }
 
   ReplyCode = 500;
