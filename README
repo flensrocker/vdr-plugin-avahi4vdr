@@ -15,4 +15,144 @@ See the file COPYING for more information.
 Description:
 With this plugin it is possible to announce network service via avahi
 to the LAN. Also plugins can browse for services on the LAN.
-Examples will follow...
+
+Call avahi4vdr's SVDRPCommand directly to publish a service or to browse
+for one. You'll get an string with something like "id=<uuid>" to identify
+your service or browser.
+avahi4vdr will send events through the plugin's Service function if something
+happens to your service or browser.
+
+Here is some pseudo code for controlling avahi4vdr like dbus2vdr will use it.
+
+Publish network service
+-----------------------
+  int replyCode = 0;
+  cString serviceId;
+  cPlugin *avahi4vdr = cPluginManager::GetPlugin("avahi4vdr");
+  ...
+  if (avahi4vdr != NULL)
+     serviceId = avahi4vdr->SVDRPCommand("CreateService", "caller=dbus2vdr,name=dbus2vdr,protocol=IPv4,port=12345,type=_dbus._tcp,subtype=_vdr_dbus2vdr._sub._dbus._tcp", replyCode);
+  ...
+  if (replyCode == 900)
+     avahi4vdr->SVDRPCommand("DeleteService", *serviceId, replyCode);
+
+Browse for network services
+---------------------------
+  int replyCode = 0;
+  cString browserId;
+  cPlugin *avahi4vdr = cPluginManager::GetPlugin("avahi4vdr");
+  ...
+  if (avahi4vdr != NULL)
+     browserId = avahi4vdr->SVDRPCommand("CreateBrowser", "caller=dbus2vdr,protocol=IPv4,type=_vdr_dbus2vdr._sub._dbus._tcp", replyCode);
+  ...
+  if (replyCode == 900)
+     avahi4vdr->SVDRPCommand("DeleteBrowser", *browserId, replyCode);
+  ...
+  bool cPluginDbus2vdr::Service(const char *Id, void *Data)
+  {
+    if (strcmp(Id, "avahi4vdr-event") == 0) {
+       cAvahiHelper options(Data);
+       const char *event = options.Get("event");
+       const char *browser_id = options.Get("id");
+       if (strcmp(event, "browser-service-resolved") == 0) {
+          const char *name = options.Get("name");
+          const char *host = options.Get("host");
+          const char *protocol = options.Get("protocol");
+          const char *address = options.Get("address");
+          const char *port = options.Get("port");
+          const char *local = options.Get("local");
+          const char *txt = NULL;
+          int txt_nr = 0;
+          while (true) {
+                txt = options.Get("txt", txt_nr);
+                if (txt == NULL)
+                   break;
+                ...
+                txt_nr++;
+                }
+          ...
+          }
+       else if (strcmp(event, "browser-service-removed") == 0) {
+          const char *name = options.Get("name");
+          const char *protocol = options.Get("protocol");
+          const char *local = options.Get("local");
+          ...
+          }
+       return true;
+       }
+    return false;
+  }
+
+Parameters
+----------
+Every call to avahi4vdr expects a string with comma separated key/value-pairs like
+"key1=value1,key2=value2,key3=value3,..."
+
+If a key or value contains a comma or backslash, it has to be escaped with a backslash.
+"name=dbus2vdr, host vdr" must be "name=dbus2vdr\, host vdr"
+You should use vdr's function 'cString esc_name = strescape(name, "\\,");' to get a
+correctly escaped string.
+
+The returned strings of SVDRPCommand may contain the following keys:
+id:      uuid of the service or browser you created
+error:   error message, e.g. if parameters are missing
+message: success message
+
+Events
+------
+If avahi4vdr notices that something "happens" to your services or browsers it will call
+the Service function of the plugin with the name of the parameter "caller" given to
+"CreateService" or "CreateBrowser".
+The first parameter will be "avahi4vdr-event" and the second a key/value-list in the
+format mentioned above.
+
+Service events
+--------------
+* event=service-created,id=a328227c-a1e7-45f8-8062-6e9f81395f90
+  Your service has been created by "CreateService" but has not been published yet.
+
+* event=service-started,id=a328227c-a1e7-45f8-8062-6e9f81395f90
+  Your service is published by the avahi-daemon.
+
+* event=service-stopped,id=a328227c-a1e7-45f8-8062-6e9f81395f90
+  Publishing of your service has been stopped. This may occur if avahi4vdr gets some error
+  from the avahi-daemon or if the avahi-daemon stopps.
+  avahi4vdr will try to reconnect to the daemon and will publish your services again.
+  You don't have to do anything.
+
+* event=service-deleted,id=a328227c-a1e7-45f8-8062-6e9f81395f90
+  Your service has been deleted through a call of "DeleteService" or halt of vdr.
+
+Browser events
+--------------
+* event=browser-created,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
+  You (or someone using your plugin's name) created a browser with "CreateBrowser".
+
+* event=browser-started,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
+  The browser is started and will get notified if it discovers something matching your browser's data.
+
+* event=browser-service-resolved,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv6,address=fe80::223:54ff:fe2f:4712,host=vdr.local,port=59419,local=true
+* event=browser-service-resolved,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv4,address=192.168.23.13,host=vdr.local,port=59419,local=true
+  Congratulations, you discovered a network service!
+
+* event=browser-service-removed,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv4,local=true
+* event=browser-service-removed,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv6,local=true
+  The service is not longer available.
+
+* event=browser-stopped,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
+  Like "serivce-stopped", see above.
+
+* event=browser-deleted,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
+  Like "browser-stopped", see above.
+
+TODO
+----
+- services.conf
+  Add support for a configuration file to publish services from other plugins without touching them.
+  Contents may look something like:
+
+  name=SVDRP on %h,type=_svdrp._tcp,port=6419
+  plugin=live,name=vdr-live on %h,type=_https._tcp,port=8443,subtype=_vdr_live._sub._https._tcp
+  plugin=streamdev-server,name=streamdev-server on %h,type=_http._tcp,port=3000,subtype=_vdr_streamdevserver._sub._http._tcp
+
+  %h should be replaced with the current hostname.

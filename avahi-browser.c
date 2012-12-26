@@ -67,9 +67,14 @@ void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex i
      }
     case AVAHI_BROWSER_REMOVE:
      {
-      if (!_ignore_local || ((flags & AVAHI_LOOKUP_RESULT_LOCAL) == 0)) {
+      bool isLocal = false;
+      if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
+         isLocal = true;
+      if (!_ignore_local || !isLocal) {
          isyslog("avahi4vdr-browser: remove of service '%s' of type %s (id %s)", name, type, *_id);
-         _avahi_client->NotifyCaller(*_caller, "browser-service-removed", *_id, NULL);
+         cString esc_name = strescape(name, "\\,");
+         cString data = cString::sprintf("name=%s,type=%s,protocol=%s,local=%s", *esc_name, type, avahi_proto_to_string(protocol), (isLocal ? "true" : "false"));
+         _avahi_client->NotifyCaller(*_caller, "browser-service-removed", *_id, *data);
          }
       break;
      }
