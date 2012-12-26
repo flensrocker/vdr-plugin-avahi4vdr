@@ -1,5 +1,5 @@
-#ifndef __DBUS2VDR_AVAHI_SERVICE_H
-#define __DBUS2VDR_AVAHI_SERVICE_H
+#ifndef __AVAHI_SERVICE_H
+#define __AVAHI_SERVICE_H
 
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>

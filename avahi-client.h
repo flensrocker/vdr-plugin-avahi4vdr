@@ -1,5 +1,5 @@
-#ifndef __DBUS2VDR_AVAHI_CLIENT_H
-#define __DBUS2VDR_AVAHI_CLIENT_H
+#ifndef __AVAHI_CLIENT_H
+#define __AVAHI_CLIENT_H
 
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>

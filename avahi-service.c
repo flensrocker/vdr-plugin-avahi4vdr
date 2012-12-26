@@ -31,7 +31,7 @@ cAvahiService::cAvahiService(cAvahiClient *avahi_client, const char *caller, con
      _subtypes = avahi_string_list_new_from_array(subtypes, subtypes_len);
   if (txts_len > 0)
      _txts = avahi_string_list_new_from_array(txts, txts_len);
-  dsyslog("dbus2vdr/avahi-service: instanciated service '%s' of type %s listening on port %d (id %s)", _name, _type, _port, *_id);
+  dsyslog("avahi4vdr-service: instanciated service '%s' of type %s listening on port %d (id %s)", _name, _type, _port, *_id);
   _avahi_client->NotifyCaller(*_caller, "service-created", *_id, NULL);
 }
 
@@ -62,7 +62,7 @@ void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState s
 void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState state)
 {
   if (_group != group) {
-     isyslog("dbus2vdr/avahi-service: unexpected group callback");
+     isyslog("avahi4vdr-service: unexpected group callback");
      return;
      }
 
@@ -72,7 +72,7 @@ void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState s
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
      {
        _avahi_client->NotifyCaller(*_caller, "service-started", *_id, NULL);
-       isyslog("dbus2vdr/avahi-service: service '%s' successfully established (id %s)", _name, *_id);
+       isyslog("avahi4vdr-service: service '%s' successfully established (id %s)", _name, *_id);
        break;
      }
     case AVAHI_ENTRY_GROUP_COLLISION:
@@ -81,13 +81,13 @@ void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState s
        n = avahi_alternative_service_name(_name);
        avahi_free(_name);
        _name = n;
-       isyslog("dbus2vdr/avahi-service: service name collision, renaming service to '%s'", _name);
+       isyslog("avahi4vdr-service: service name collision, renaming service to '%s'", _name);
        Create(client);
        break;
      }
     case AVAHI_ENTRY_GROUP_FAILURE:
      {
-       esyslog("dbus2vdr/avahi-service: entry group failure: %s", avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(group))));
+       esyslog("avahi4vdr-service: entry group failure: %s", avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(group))));
        _avahi_client->ServiceError(this);
        break;
      }
@@ -105,7 +105,7 @@ void cAvahiService::Create(AvahiClient *client)
   if (_group == NULL) {
       _group = avahi_entry_group_new(client, GroupCallback, this);
       if (_group == NULL) {
-         esyslog("dbus2vdr/avahi-service: avahi_entry_group_new failed: %s", avahi_strerror(avahi_client_errno(client)));
+         esyslog("avahi4vdr-service: avahi_entry_group_new failed: %s", avahi_strerror(avahi_client_errno(client)));
          goto fail;
          }
       }
@@ -114,7 +114,7 @@ void cAvahiService::Create(AvahiClient *client)
      if (ret  < 0) {
         if (ret == AVAHI_ERR_COLLISION)
             goto collision;
-        esyslog("dbus2vdr/avahi-service: failed to add service '%s' of type '%s': %s", _name, _type, avahi_strerror(ret));
+        esyslog("avahi4vdr-service: failed to add service '%s' of type '%s': %s", _name, _type, avahi_strerror(ret));
         goto fail;
         }
 
@@ -126,7 +126,7 @@ void cAvahiService::Create(AvahiClient *client)
               if ((subtype != NULL) && (sublen > 0) && (subtype[0] != 0)) {
                  ret = avahi_entry_group_add_service_subtype(_group, AVAHI_IF_UNSPEC, _protocol, (AvahiPublishFlags)0, _name, _type, NULL, subtype);
                  if (ret < 0)
-                    esyslog("dbus2vdr/avahi-service: failed to add subtype %s on '%s' of type '%s': %s", subtype, _name, _type, avahi_strerror(ret));
+                    esyslog("avahi4vdr-service: failed to add subtype %s on '%s' of type '%s': %s", subtype, _name, _type, avahi_strerror(ret));
                  }
               l = avahi_string_list_get_next(l);
               }
@@ -135,15 +135,15 @@ void cAvahiService::Create(AvahiClient *client)
      if ((_txts != NULL) && (avahi_string_list_length(_txts) > 0)) {
         ret = avahi_entry_group_update_service_txt_strlst(_group, AVAHI_IF_UNSPEC, _protocol, (AvahiPublishFlags)0, _name, _type, NULL, _txts);
         if (ret < 0)
-           esyslog("dbus2vdr/avahi-service: failed to add txt records on '%s' of type '%s': %s", _name, _type, avahi_strerror(ret));
+           esyslog("avahi4vdr-service: failed to add txt records on '%s' of type '%s': %s", _name, _type, avahi_strerror(ret));
         }
 
      ret = avahi_entry_group_commit(_group);
      if (ret < 0) {
-        esyslog("dbus2vdr/avahi-service: failed to commit entry group of '%s': %s", _name, avahi_strerror(ret));
+        esyslog("avahi4vdr-service: failed to commit entry group of '%s': %s", _name, avahi_strerror(ret));
         goto fail;
         }
-     dsyslog("dbus2vdr/avahi-service: created service '%s' (id %s)", _name, *_id);
+     dsyslog("avahi4vdr-service: created service '%s' (id %s)", _name, *_id);
      }
   return;
 
@@ -151,7 +151,7 @@ collision:
   n = avahi_alternative_service_name(_name);
   avahi_free(_name);
   _name = n;
-  isyslog("dbus2vdr/avahi-service: service name collision, renaming service to '%s'", _name);
+  isyslog("avahi4vdr-service: service name collision, renaming service to '%s'", _name);
   Reset();
   Create(client);
   return;
@@ -167,7 +167,7 @@ void cAvahiService::Reset(void)
 {
   if (_group != NULL) {
      avahi_entry_group_reset(_group);
-     dsyslog("dbus2vdr/avahi-service: reset service '%s' (id %s)", _name, *_id);
+     dsyslog("avahi4vdr-service: reset service '%s' (id %s)", _name, *_id);
      }
 }
 
@@ -176,7 +176,7 @@ void cAvahiService::Delete(void)
   if (_group != NULL) {
      avahi_entry_group_free(_group);
      _avahi_client->NotifyCaller(*_caller, "service-stopped", *_id, NULL);
-     dsyslog("dbus2vdr/avahi-service: deleted service '%s' (id %s)", _name, *_id);
+     dsyslog("avahi4vdr-service: deleted service '%s' (id %s)", _name, *_id);
      _group = NULL;
      }
 }

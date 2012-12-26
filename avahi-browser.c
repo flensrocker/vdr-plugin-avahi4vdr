@@ -21,7 +21,7 @@ cAvahiBrowser::cAvahiBrowser(cAvahiClient *avahi_client, const char *caller, Ava
   uuid_unparse_lower(id, sid);
   _id = sid;
   _type = avahi_strdup(type);
-  dsyslog("dbus2vdr/avahi-browser: instanciated browser of type %s (id %s)", _type, *_id);
+  dsyslog("avahi4vdr-browser: instanciated browser of type %s (id %s)", _type, *_id);
   _avahi_client->NotifyCaller(*_caller, "browser-created", *_id, NULL);
 }
 
@@ -45,30 +45,30 @@ void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex i
                      const char *type, const char *domain, AvahiLookupResultFlags flags)
 {
   if (_browser != browser) {
-     isyslog("dbus2vdr/avahi-browser: unexpected browser callback");
+     isyslog("avahi4vdr-browser: unexpected browser callback");
      return;
      }
 
   switch (event) {
     case AVAHI_BROWSER_FAILURE:
      {
-       esyslog("dbus2vdr/avahi-browser: failure %s", avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(browser))));
+       esyslog("avahi4vdr-browser: failure %s", avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(browser))));
        _avahi_client->BrowserError(this);
        return;
      }
     case AVAHI_BROWSER_NEW:
      {
       if (!_ignore_local || ((flags & AVAHI_LOOKUP_RESULT_LOCAL) == 0)) {
-         isyslog("dbus2vdr/avahi-browser: new service '%s' of type %s (id %s)", name, type, *_id);
+         isyslog("avahi4vdr-browser: new service '%s' of type %s (id %s)", name, type, *_id);
          if (avahi_service_resolver_new(_avahi_client->_client, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, ResolverCallback, this) == NULL)
-            esyslog("dbus2vdr/avahi-browser: failed to resolve service '%s' (id %s): %s", name, *_id, avahi_strerror(avahi_client_errno(_avahi_client->_client)));
+            esyslog("avahi4vdr-browser: failed to resolve service '%s' (id %s): %s", name, *_id, avahi_strerror(avahi_client_errno(_avahi_client->_client)));
          }
       break;
      }
     case AVAHI_BROWSER_REMOVE:
      {
       if (!_ignore_local || ((flags & AVAHI_LOOKUP_RESULT_LOCAL) == 0)) {
-         isyslog("dbus2vdr/avahi-browser: remove of service '%s' of type %s (id %s)", name, type, *_id);
+         isyslog("avahi4vdr-browser: remove of service '%s' of type %s (id %s)", name, type, *_id);
          _avahi_client->NotifyCaller(*_caller, "browser-service-removed", *_id, NULL);
          }
       break;
@@ -76,7 +76,7 @@ void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex i
     case AVAHI_BROWSER_ALL_FOR_NOW:
     case AVAHI_BROWSER_CACHE_EXHAUSTED:
      {
-      isyslog("dbus2vdr/avahi-browser: %s", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
+      isyslog("avahi4vdr-browser: %s", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
       break;
      }
     }
@@ -100,11 +100,11 @@ void cAvahiBrowser::ResolverCallback(AvahiServiceResolver *resolver, AvahiIfInde
 
   switch (event) {
     case AVAHI_RESOLVER_FAILURE:
-       esyslog("dbus2vdr/avahi-resolver: failed to resolve service '%s' of type %s (id %s): %s", name, type, *_id, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver))));
+       esyslog("avahi4vdr-resolver: failed to resolve service '%s' of type %s (id %s): %s", name, type, *_id, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver))));
        break;
     case AVAHI_RESOLVER_FOUND:
      {
-      isyslog("dbus2vdr/avahi-resolver: resolved service '%s' of type %s (id %s)", name, type, *_id);
+      isyslog("avahi4vdr-resolver: resolved service '%s' of type %s (id %s)", name, type, *_id);
       bool isLocal = false;
       if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
          isLocal = true;
@@ -138,7 +138,7 @@ void cAvahiBrowser::Create(AvahiClient *client)
   if (_browser == NULL) {
      _browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, _type, NULL, (AvahiLookupFlags)0, BrowserCallback, this);
      if (_browser == NULL)
-        esyslog("dbus2vdr/avahi-browser: failure on creating service browser on type %s (id %s): %s", _type, *_id, avahi_strerror(avahi_client_errno(client)));
+        esyslog("avahi4vdr-browser: failure on creating service browser on type %s (id %s): %s", _type, *_id, avahi_strerror(avahi_client_errno(client)));
      else
         _avahi_client->NotifyCaller(*_caller, "browser-started", *_id, NULL);
      }
@@ -149,7 +149,7 @@ void cAvahiBrowser::Delete(void)
   if (_browser != NULL) {
      avahi_service_browser_free(_browser);
      _avahi_client->NotifyCaller(*_caller, "browser-stopped", *_id, NULL);
-     dsyslog("dbus2vdr/avahi-browser: deleted browser on type '%s' (id %s)", _type, *_id);
+     dsyslog("avahi4vdr-browser: deleted browser on type '%s' (id %s)", _type, *_id);
      _browser = NULL;
      }
 }

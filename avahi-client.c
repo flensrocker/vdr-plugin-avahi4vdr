@@ -47,12 +47,12 @@ cAvahiService *cAvahiClient::GetService(const char *id) const
 
 void  cAvahiClient::BrowserError(cAvahiBrowser *browser)
 {
-  esyslog("dbus2vdr/avahi-client: browser error");
+  esyslog("avahi4vdr-client: browser error");
 }
 
 void  cAvahiClient::ServiceError(cAvahiService *service)
 {
-  esyslog("dbus2vdr/avahi-client: service error");
+  esyslog("avahi4vdr-client: service error");
 }
 
 bool cAvahiClient::ServerIsRunning(void)
@@ -73,7 +73,7 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state, v
 void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
 {
   if (_client != client) {
-     isyslog("dbus2vdr/avahi-client: unexpected client callback");
+     isyslog("avahi4vdr-client: unexpected client callback");
      return;
      }
 
@@ -90,7 +90,7 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
      }
     case AVAHI_CLIENT_FAILURE:
      {
-      esyslog("dbus2vdr/avahi: client failure: %s", avahi_strerror(avahi_client_errno(client)));
+      esyslog("avahi4vdr-client: client failure: %s", avahi_strerror(avahi_client_errno(client)));
       avahi_simple_poll_quit(_simple_poll);
       break;
      }
@@ -117,7 +117,7 @@ void  cAvahiClient::NotifyCaller(const char *caller, const char *event, const ch
      return;
   cString call = cString::sprintf("event=%s,id=%s%s%s", event, id, (data != NULL ? "," : ""), (data != NULL ? data : ""));
   plugin->Service("avahi4vdr-event", (void*)(*call));
-  isyslog("dbus2vdr/avahi-client: notify %s on event %s", caller, *call);
+  isyslog("avahi4vdr-client: notify %s on event %s", caller, *call);
 }
 
 cString cAvahiClient::CreateBrowser(const char *caller, AvahiProtocol protocol, const char *type, bool ignore_local)
@@ -187,7 +187,7 @@ void cAvahiClient::Stop(void)
 void cAvahiClient::Action(void)
 {
   _started = true;
-  isyslog("dbus2vdr/avahi: publisher started");
+  isyslog("avahi4vdr-client: started");
 
   int avahiError = 0;
   int reconnectLogCount = 0;
@@ -195,7 +195,7 @@ void cAvahiClient::Action(void)
         if (_simple_poll == NULL) {
            // don't get too verbose...
            if (reconnectLogCount < 5)
-              isyslog("dbus2vdr/avahi: create simple_poll");
+              isyslog("avahi4vdr-client: create simple_poll");
            else if (reconnectLogCount > 15) // ...and too quiet
               reconnectLogCount = 0;
 
@@ -203,7 +203,7 @@ void cAvahiClient::Action(void)
            _simple_poll = avahi_simple_poll_new();
            if (_simple_poll == NULL) {
               Unlock();
-              esyslog("dbus2vdr/avahi: error on creating simple_poll");
+              esyslog("avahi4vdr-client: error on creating simple_poll");
               cCondWait::SleepMs(1000);
               reconnectLogCount++;
               continue;
@@ -215,7 +215,7 @@ void cAvahiClient::Action(void)
         if (_client == NULL) {
            // don't get too verbose...
            if (reconnectLogCount < 5)
-              isyslog("dbus2vdr/avahi: create client");
+              isyslog("avahi4vdr-client: create client");
            else if (reconnectLogCount > 15) // ...and too quiet
               reconnectLogCount = 0;
 
@@ -223,7 +223,7 @@ void cAvahiClient::Action(void)
            _client = avahi_client_new(avahi_simple_poll_get(_simple_poll), (AvahiClientFlags)0, ClientCallback, this, &avahiError);
            if (_client == NULL) {
               Unlock();
-              esyslog("dbus2vdr/avahi: error on creating client: %s", avahi_strerror(avahiError));
+              esyslog("avahi4vdr-client: error on creating client: %s", avahi_strerror(avahiError));
               cCondWait::SleepMs(1000);
               reconnectLogCount++;
               continue;
