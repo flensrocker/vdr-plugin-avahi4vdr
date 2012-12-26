@@ -160,9 +160,9 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      AvahiProtocol protocol = AVAHI_PROTO_UNSPEC;
      const char *type = options.Get("type");
      int port = -1;
-     int subtypes_len = 0;
+     int subtypes_len = options.Count("subtype");
      const char **subtypes = NULL;
-     int txts_len = 0;
+     int txts_len = options.Count("txt");
      const char **txts = NULL;
 
      const char *tmp = options.Get("protocol");
@@ -176,7 +176,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      tmp = options.Get("port");
      if ((tmp != NULL) && isnumber(tmp))
         port = atoi(tmp);
-        
+
      if (name == NULL) {
         ReplyCode = 501;
         return "error=missing service name";
@@ -190,8 +190,28 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         return "error=missing port";
         }
 
+     if (subtypes_len > 0) {
+        subtypes = new const char*[subtypes_len];
+        for (int i = 0; i < subtypes_len; i++) {
+            subtypes[i] = options.Get("subtype", i);
+            dsyslog("avahi4vdr: found subtype %s", subtypes[i]);
+            }
+        }
+
+     if (txts_len > 0) {
+        txts = new const char*[txts_len];
+        for (int i = 0; i < txts_len; i++) {
+            txts[i] = options.Get("txt", i);
+            dsyslog("avahi4vdr: found txt %s", txts[i]);
+            }
+        }
+
      ReplyCode = 900;
      cString id = AvahiClient()->CreateService(caller, name, protocol, type, port, subtypes_len, subtypes, txts_len, txts);
+     if (subtypes != NULL)
+        delete [] subtypes;
+     if (txts != NULL)
+        delete [] txts;
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteService") == 0) {
