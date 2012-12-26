@@ -1,0 +1,18 @@
+This is a "plugin" for the Video Disk Recorder (VDR).
+
+Written by:                  Lars Hanisch <dvb@flensrocker.de>
+
+Project's homepage:          https://github.com/flensrocker/vdr-plugin-avahi4vdr
+
+Latest version available at: https://github.com/flensrocker/vdr-plugin-avahi4vdr
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+See the file COPYING for more information.
+
+Description:
+With this plugin it is possible to announce network service via avahi
+to the LAN. Also plugins can browse for services on the LAN.
+Examples will follow...
