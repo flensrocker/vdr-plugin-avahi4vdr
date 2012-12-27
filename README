@@ -93,6 +93,9 @@ If a key or value contains a comma or backslash, it has to be escaped with a bac
 You should use vdr's function 'cString esc_name = strescape(name, "\\,");' to get a
 correctly escaped string.
 
+You can use avahi-helper.h for a class that splits up the parameter string into the
+single key/value pairs.
+
 The returned strings of SVDRPCommand may contain the following keys:
 id:      uuid of the service or browser you created
 error:   error message, e.g. if parameters are missing
