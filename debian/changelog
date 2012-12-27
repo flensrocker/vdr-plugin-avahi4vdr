@@ -1,3 +1,9 @@
+vdr-plugin-avahi4vdr (3-0yavdr0~precise) precise; urgency=medium
+
+  * new upstream release with Makefile for vdr 1.7.33
+
+ -- Lars Hanisch <dvb@flensrocker.de>  Thu, 27 Dec 2012 12:38:14 +0100
+
 vdr-plugin-avahi4vdr (2-0yavdr0~precise) precise; urgency=medium
 
   * new upstream release
