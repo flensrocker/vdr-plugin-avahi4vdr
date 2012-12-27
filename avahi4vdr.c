@@ -13,7 +13,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "1";
+static const char *VERSION        = "2";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
