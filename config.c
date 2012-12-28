@@ -101,10 +101,8 @@ void cAvahiServicesConfig::StartServices(cAvahiClient *client)
   if (client == NULL)
      return;
   for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
-      if (service->_is_valid) {
-         cAvahiHelper id(*client->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts));
-         service->_id = id.Get("id");
-         }
+      if (service->_is_valid)
+         service->_id = client->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts);
       }
 }
 
