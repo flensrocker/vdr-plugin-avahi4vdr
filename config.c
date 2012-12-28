@@ -20,6 +20,7 @@ void cAvahiServicesConfig::Clear(void)
   _line = NULL;
   _is_valid = false;
   _name = NULL;
+  _protocol = AVAHI_PROTO_UNSPEC;
   _type = NULL;
   _port = -1;
   _subtypes.Clear();
@@ -34,6 +35,13 @@ bool cAvahiServicesConfig::Parse(const char *s)
   if ((tmp != NULL) && (tmp[0] != '#')) {
      cAvahiHelper options(tmp);
      _name = options.Get("name");
+     tmp = options.Get("protocol");
+     if (tmp != NULL) {
+        if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET)) == 0)
+           _protocol = AVAHI_PROTO_INET;
+        else if (strcmp(tmp, avahi_proto_to_string(AVAHI_PROTO_INET6)) == 0)
+           _protocol = AVAHI_PROTO_INET6;
+        }
      _type = options.Get("type");
      tmp = options.Get("port");
      if ((tmp != NULL) && isnumber(tmp))

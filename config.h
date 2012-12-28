@@ -1,5 +1,7 @@
 #ifndef __AVAHI4VDR_CONFIG_H
 
+#include <avahi-common/address.h>
+
 #include <vdr/config.h>
 
 
@@ -8,12 +10,14 @@ private:
   cString _line;
 
 public:
-  bool        _is_valid;
-  cString     _name;
-  cString     _type;
-  int         _port;
-  cStringList _subtypes;
-  cStringList _txts;
+  cString        _id;
+  bool           _is_valid;
+  cString        _name;
+  AvahiProtocol  _protocol;
+  cString        _type;
+  int            _port;
+  cStringList    _subtypes;
+  cStringList    _txts;
 
   cAvahiServicesConfig(void);
   virtual ~cAvahiServicesConfig(void);

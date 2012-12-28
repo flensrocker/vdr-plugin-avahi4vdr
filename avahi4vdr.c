@@ -10,10 +10,11 @@
 #include "avahi-client.h"
 #include "avahi-helper.h"
 #include "avahi-service.h"
+#include "config.h"
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "3";
+static const char *VERSION        = "4";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -80,18 +81,30 @@ bool cPluginAvahi4vdr::ProcessArgs(int argc, char *argv[])
 bool cPluginAvahi4vdr::Initialize(void)
 {
   // Initialize any background activities the plugin shall perform.
+  const char *configDir = cPlugin::ConfigDirectory("avahi4vdr");
+  cAvahiServicesConfig::Services.Load(*cString::sprintf("%s/services.conf", configDir), true, false);
   return true;
 }
 
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid) {
+         cAvahiHelper id(*AvahiClient()->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts));
+         service->_id = id.Get("id");
+         }
+      }
   return true;
 }
 
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid && (*service->_id != NULL))
+         AvahiClient()->DeleteService(*service->_id);
+      }
 }
 
 void cPluginAvahi4vdr::Housekeeping(void)
