@@ -4,9 +4,13 @@
 
 #include <vdr/config.h>
 
+class cAvahiClient;
+
 
 class cAvahiServicesConfig : public cListObject {
 private:
+  static cConfig<cAvahiServicesConfig> Services;
+  
   cString _line;
 
 public:
@@ -26,7 +30,10 @@ public:
   bool Parse(const char *s);
   bool Save(FILE *f);
 
-  static cConfig<cAvahiServicesConfig> Services;
+  static cString _config_file;
+
+  static void StartServices(cAvahiClient *client);
+  static void StopServices(cAvahiClient *client);
 };
 
 #endif
