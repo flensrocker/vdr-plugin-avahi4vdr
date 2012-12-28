@@ -67,6 +67,16 @@ bool cAvahiServicesConfig::Parse(const char *s)
         esyslog("avahi4vdr/services.conf: missing name at line '%s'", s);
         _is_valid = false;
         }
+     else {
+        if (strstr(*_name, "%h") != NULL) {
+           char hostname[HOST_NAME_MAX];
+           if (gethostname(hostname, HOST_NAME_MAX) == 0) {
+              char *n = strreplace(strdup(*_name), "%h", hostname);
+              _name = n;
+              free(n);
+              }
+           }
+        }
      if (*_type == NULL) {
         esyslog("avahi4vdr/services.conf: missing type at line '%s'", s);
         _is_valid = false;
