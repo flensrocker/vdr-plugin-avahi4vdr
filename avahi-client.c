@@ -147,10 +147,10 @@ void    cAvahiClient::DeleteBrowser(const char *id)
   Unlock();
 }
 
-cString cAvahiClient::CreateService(const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, int subtypes_len, const char **subtypes, int txts_len, const char **txts)
+cString cAvahiClient::CreateService(const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, const cStringList& subtypes, const cStringList& txts)
 {
   Lock();
-  cAvahiService *service = new cAvahiService(this, caller, name, protocol, type, port, subtypes_len, subtypes, txts_len, txts);
+  cAvahiService *service = new cAvahiService(this, caller, name, protocol, type, port, subtypes, txts);
   if (service == NULL) {
      Unlock();
      return "";

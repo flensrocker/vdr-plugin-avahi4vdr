@@ -10,10 +10,11 @@
 #include "avahi-client.h"
 #include "avahi-helper.h"
 #include "avahi-service.h"
+#include "config.h"
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "3";
+static const char *VERSION        = "4";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -80,18 +81,30 @@ bool cPluginAvahi4vdr::ProcessArgs(int argc, char *argv[])
 bool cPluginAvahi4vdr::Initialize(void)
 {
   // Initialize any background activities the plugin shall perform.
+  const char *configDir = cPlugin::ConfigDirectory("avahi4vdr");
+  cAvahiServicesConfig::Services.Load(*cString::sprintf("%s/services.conf", configDir), true, false);
   return true;
 }
 
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid) {
+         cAvahiHelper id(*AvahiClient()->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts));
+         service->_id = id.Get("id");
+         }
+      }
   return true;
 }
 
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid && (*service->_id != NULL))
+         AvahiClient()->DeleteService(*service->_id);
+      }
 }
 
 void cPluginAvahi4vdr::Housekeeping(void)
@@ -161,9 +174,9 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      const char *type = options.Get("type");
      int port = -1;
      int subtypes_len = options.Count("subtype");
-     const char **subtypes = NULL;
+     cStringList subtypes(subtypes_len);
      int txts_len = options.Count("txt");
-     const char **txts = NULL;
+     cStringList txts(txts_len);
 
      const char *tmp = options.Get("protocol");
      if (tmp != NULL) {
@@ -191,27 +204,21 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      if (subtypes_len > 0) {
-        subtypes = new const char*[subtypes_len];
         for (int i = 0; i < subtypes_len; i++) {
-            subtypes[i] = options.Get("subtype", i);
+            subtypes[i] = strdup(options.Get("subtype", i));
             dsyslog("avahi4vdr: found subtype %s", subtypes[i]);
             }
         }
 
      if (txts_len > 0) {
-        txts = new const char*[txts_len];
         for (int i = 0; i < txts_len; i++) {
-            txts[i] = options.Get("txt", i);
+            txts[i] = strdup(options.Get("txt", i));
             dsyslog("avahi4vdr: found txt %s", txts[i]);
             }
         }
 
      ReplyCode = 900;
-     cString id = AvahiClient()->CreateService(caller, name, protocol, type, port, subtypes_len, subtypes, txts_len, txts);
-     if (subtypes != NULL)
-        delete [] subtypes;
-     if (txts != NULL)
-        delete [] txts;
+     cString id = AvahiClient()->CreateService(caller, name, protocol, type, port, subtypes, txts);
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteService") == 0) {

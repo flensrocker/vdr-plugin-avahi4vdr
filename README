@@ -148,14 +148,15 @@ Browser events
 * event=browser-deleted,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
   Like "browser-stopped", see above.
 
-TODO
-----
-- services.conf
-  Add support for a configuration file to publish services from other plugins without touching them.
-  Contents may look something like:
+services.conf
+-------------
+You can place a file called services.conf in the plugin's configuration directory.
+For each valid line with a service configuration, this service will be published
+via the avahi-daemon. Each occurrence of "%h" will be replaced with the hostname.
+You should use the following scheme for the subtypes:
+  _vdr_<pluginname>._sub._<protocol>._<transport>
 
-  name=SVDRP on %h,type=_svdrp._tcp,port=6419
-  plugin=live,name=vdr-live on %h,type=_https._tcp,port=8443,subtype=_vdr_live._sub._https._tcp
-  plugin=streamdev-server,name=streamdev-server on %h,type=_http._tcp,port=3000,subtype=_vdr_streamdevserver._sub._http._tcp
-
-  %h should be replaced with the current hostname.
+Examples:
+name=SVDRP on %h,type=_svdrp._tcp,port=6419
+name=vdr-live on %h,type=_https._tcp,port=8443,subtype=_vdr_live._sub._https._tcp
+name=streamdev-server on %h,type=_http._tcp,port=3000,subtype=_vdr_streamdevserver._sub._http._tcp
