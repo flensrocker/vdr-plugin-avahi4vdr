@@ -1,10 +1,11 @@
 #include "config.h"
 
+#include "avahi-client.h"
 #include "avahi-helper.h"
 
 
 cConfig<cAvahiServicesConfig> cAvahiServicesConfig::Services;
-
+cString cAvahiServicesConfig::_config_file;
 
 cAvahiServicesConfig::cAvahiServicesConfig(void)
 {
@@ -92,4 +93,27 @@ bool cAvahiServicesConfig::Parse(const char *s)
 bool cAvahiServicesConfig::Save(FILE *f)
 {
   return fprintf(f, "%s\n", *_line) > 0;
+}
+
+void cAvahiServicesConfig::StartServices(cAvahiClient *client)
+{
+  Services.Load(*_config_file, true, false);
+  if (client == NULL)
+     return;
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid) {
+         cAvahiHelper id(*client->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts));
+         service->_id = id.Get("id");
+         }
+      }
+}
+
+void cAvahiServicesConfig::StopServices(cAvahiClient *client)
+{
+  if (client == NULL)
+     return;
+  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
+      if (service->_is_valid && (*service->_id != NULL))
+         client->DeleteService(*service->_id);
+      }
 }

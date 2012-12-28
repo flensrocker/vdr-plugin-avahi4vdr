@@ -14,7 +14,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "4";
+static const char *VERSION        = "5";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -81,30 +81,21 @@ bool cPluginAvahi4vdr::ProcessArgs(int argc, char *argv[])
 bool cPluginAvahi4vdr::Initialize(void)
 {
   // Initialize any background activities the plugin shall perform.
-  const char *configDir = cPlugin::ConfigDirectory("avahi4vdr");
-  cAvahiServicesConfig::Services.Load(*cString::sprintf("%s/services.conf", configDir), true, false);
+  cAvahiServicesConfig::_config_file = cString::sprintf("%s/services.conf", cPlugin::ConfigDirectory("avahi4vdr"));
   return true;
 }
 
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
-      if (service->_is_valid) {
-         cAvahiHelper id(*AvahiClient()->CreateService(NULL, service->_name, service->_protocol, service->_type, service->_port, service->_subtypes, service->_txts));
-         service->_id = id.Get("id");
-         }
-      }
+  cAvahiServicesConfig::StartServices(AvahiClient());
   return true;
 }
 
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
-  for (cAvahiServicesConfig *service = cAvahiServicesConfig::Services.First(); service; service = cAvahiServicesConfig::Services.Next(service)) {
-      if (service->_is_valid && (*service->_id != NULL))
-         AvahiClient()->DeleteService(*service->_id);
-      }
+  cAvahiServicesConfig::StopServices(AvahiClient());
 }
 
 void cPluginAvahi4vdr::Housekeeping(void)
@@ -157,7 +148,13 @@ bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
 const char **cPluginAvahi4vdr::SVDRPHelpPages(void)
 {
   // Return help text for SVDRP commands this plugin implements
-  return NULL;
+  static const char *HelpPages[] = {
+    "ReloadServices\n"
+    "    All static services are stopped, the services.conf is reloaded\n"
+    "    and the services are started again.",
+    NULL
+    };
+  return HelpPages;
 }
 
 cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, int &ReplyCode)
@@ -167,7 +164,13 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
 
   cAvahiHelper options(Option);
 
-  if (strcmp(Command, "CreateService") == 0) {
+  if (strcmp(Command, "ReloadServices") == 0) {
+     cAvahiServicesConfig::StopServices(AvahiClient());
+     cAvahiServicesConfig::StartServices(AvahiClient());
+     ReplyCode = 900;
+     return "services.conf reloaded";
+     }
+  else if (strcmp(Command, "CreateService") == 0) {
      const char *caller = options.Get("caller");
      const char *name = options.Get("name");
      AvahiProtocol protocol = AVAHI_PROTO_UNSPEC;

@@ -160,3 +160,5 @@ Examples:
 name=SVDRP on %h,type=_svdrp._tcp,port=6419
 name=vdr-live on %h,type=_https._tcp,port=8443,subtype=_vdr_live._sub._https._tcp
 name=streamdev-server on %h,type=_http._tcp,port=3000,subtype=_vdr_streamdevserver._sub._http._tcp
+
+To reload the services.conf there's the SVDRP command "ReloadServices".

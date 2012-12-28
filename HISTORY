@@ -8,3 +8,7 @@ VDR Plugin 'avahi4vdr' Revision History
 2012-12-28: Version 4
 
 - add support for services.conf
+
+2012-12-28: Version 5
+
+- add SVDRP command for reloading services.conf
