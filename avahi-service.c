@@ -9,7 +9,7 @@
 #include <avahi-common/timeval.h>
 
 
-cAvahiService::cAvahiService(cAvahiClient *avahi_client, const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, int subtypes_len, const char **subtypes, int txts_len, const char **txts)
+cAvahiService::cAvahiService(cAvahiClient *avahi_client, const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, const cStringList& subtypes, const cStringList& txts)
  :_avahi_client(avahi_client)
  ,_caller(caller)
  ,_group(NULL)
@@ -27,10 +27,18 @@ cAvahiService::cAvahiService(cAvahiClient *avahi_client, const char *caller, con
   _id = sid;
   _name = avahi_strdup(name);
   _type = avahi_strdup(type);
-  if (subtypes_len > 0)
-     _subtypes = avahi_string_list_new_from_array(subtypes, subtypes_len);
-  if (txts_len > 0)
-     _txts = avahi_string_list_new_from_array(txts, txts_len);
+  if (subtypes.Size() > 0) {
+     const char *tmp = subtypes[subtypes.Size() - 1];
+     _subtypes = avahi_string_list_new_from_array(&tmp, 1);
+     for (int i = subtypes.Size() - 2; i >= 0; i--)
+         _subtypes = avahi_string_list_add(_subtypes, subtypes[i]);
+     }
+  if (txts.Size() > 0) {
+     const char *tmp = txts[txts.Size() - 1];
+     _txts = avahi_string_list_new_from_array(&tmp, 1);
+     for (int i = txts.Size() - 2; i >= 0; i--)
+         _txts = avahi_string_list_add(_txts, txts[i]);
+     }
   dsyslog("avahi4vdr-service: instanciated service '%s' of type %s listening on port %d (id %s)", _name, _type, _port, *_id);
   _avahi_client->NotifyCaller(*_caller, "service-created", *_id, NULL);
 }

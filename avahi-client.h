@@ -1,5 +1,5 @@
-#ifndef __AVAHI_CLIENT_H
-#define __AVAHI_CLIENT_H
+#ifndef __AVAHI4VDR_CLIENT_H
+#define __AVAHI4VDR_CLIENT_H
 
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
@@ -49,7 +49,7 @@ public:
   cString CreateBrowser(const char *caller, AvahiProtocol protocol, const char *type, bool ignore_local);
   void    DeleteBrowser(const char *id);
 
-  cString CreateService(const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, int subtypes_len, const char **subtypes, int txts_len, const char **txts);
+  cString CreateService(const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, const cStringList& subtypes, const cStringList& txts);
   void    DeleteService(const char *id);
 
   void Stop(void);

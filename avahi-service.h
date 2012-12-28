@@ -1,5 +1,5 @@
-#ifndef __AVAHI_SERVICE_H
-#define __AVAHI_SERVICE_H
+#ifndef __AVAHI4VDR_SERVICE_H
+#define __AVAHI4VDR_SERVICE_H
 
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
@@ -34,7 +34,7 @@ private:
   void GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState state);
 
 public:
-  cAvahiService(cAvahiClient *avahi_client, const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, int subtypes_len, const char **subtypes, int txts_len, const char **txts);
+  cAvahiService(cAvahiClient *avahi_client, const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, const cStringList& subtypes, const cStringList& txts);
   virtual ~cAvahiService(void);
 
   cString  Id(void) const { return _id; }

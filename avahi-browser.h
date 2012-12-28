@@ -1,5 +1,5 @@
-#ifndef __AVAHI_BROWSER_H
-#define __AVAHI_BROWSER_H
+#ifndef __AVAHI4VDR_BROWSER_H
+#define __AVAHI4VDR_BROWSER_H
 
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>

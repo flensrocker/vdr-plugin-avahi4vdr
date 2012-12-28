@@ -1,5 +1,5 @@
-#ifndef __AVAHI_HELPER_H
-#define __AVAHI_HELPER_H
+#ifndef __AVAHI4VDR_HELPER_H
+#define __AVAHI4VDR_HELPER_H
 
 #include <vdr/tools.h>
 
