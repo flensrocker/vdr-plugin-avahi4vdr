@@ -79,9 +79,14 @@ void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex i
       break;
      }
     case AVAHI_BROWSER_ALL_FOR_NOW:
+     {
+      dsyslog("avahi4vdr-browser: all for now");
+      _avahi_client->NotifyCaller(*_caller, "browser-allfornow", *_id, NULL);
+      break;
+     }
     case AVAHI_BROWSER_CACHE_EXHAUSTED:
      {
-      isyslog("avahi4vdr-browser: %s", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
+      dsyslog("avahi4vdr-browser: cache exhausted");
       break;
      }
     }

@@ -14,7 +14,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "6";
+static const char *VERSION        = "7";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 

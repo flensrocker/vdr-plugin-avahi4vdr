@@ -138,6 +138,9 @@ Browser events
 * event=browser-service-resolved,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv4,address=192.168.23.13,host=vdr.local,port=59419,local=true
   Congratulations, you discovered a network service!
 
+* event=browser-allfornow,id=a3c43ebb-be1d-4312-908f-2a78c91a062b
+  Avahi doesn't expect any new services in the near future.
+
 * event=browser-service-removed,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv4,local=true
 * event=browser-service-removed,id=a3c43ebb-be1d-4312-908f-2a78c91a062b,name=dbus2vdr on vdr,type=_dbus._tcp,protocol=IPv6,local=true
   The service is not longer available.
