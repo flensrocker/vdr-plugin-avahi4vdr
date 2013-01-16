@@ -12,3 +12,7 @@ VDR Plugin 'avahi4vdr' Revision History
 2012-12-28: Version 5
 
 - add SVDRP command for reloading services.conf
+
+2013-01-16: Version 7
+
+- add event browser-allfornow
