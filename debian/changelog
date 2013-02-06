@@ -1,3 +1,10 @@
+vdr-plugin-avahi4vdr (8-0yavdr0~precise) precise; urgency=medium
+
+  * new upstream release
+  * create -dev package for helper-headers
+
+ -- Lars Hanisch <lars@vdr2>  Thu, 07 Feb 2013 00:27:15 +0100
+
 vdr-plugin-avahi4vdr (7-0yavdr0~precise) precise; urgency=medium
 
   * new upstream release
