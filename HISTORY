@@ -16,3 +16,8 @@ VDR Plugin 'avahi4vdr' Revision History
 2013-01-16: Version 7
 
 - add event browser-allfornow
+
+2013-02-13: Version 9
+
+- install helper header
+
