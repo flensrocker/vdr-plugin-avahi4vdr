@@ -19,6 +19,7 @@ VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ pri
 PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
 #INCDIR = $(call PKGCFG,incdir)
 INCDIR ?= /usr/include
+PLGINCDIR = $(INCDIR)/vdr/plugins/$(PLUGIN)
 LIBDIR = $(call PKGCFG,libdir)
 LOCDIR = $(call PKGCFG,locdir)
 PLGCFG = $(call PKGCFG,plgcfg)
@@ -111,7 +112,7 @@ install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
 
 install-includes: avahi-helper.h
-	install -D $^ $(DESTDIR)$(INCDIR)/vdr/$(PLUGIN)/$^
+	install -D $^ $(DESTDIR)$(PLGINCDIR)/$^
 
 install: install-lib install-i18n install-includes
 
