@@ -8,7 +8,7 @@ Homepage: https://github.com/flensrocker/vdr-plugin-avahi4vdr
 
 Package: vdr-plugin-avahi4vdr
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${vdr:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: A VDR plugin, publish or browser for network service with avahi
  This VDR-plugin will expose some methods to publish or browser for
  network service announced by the avahi-daemon.
