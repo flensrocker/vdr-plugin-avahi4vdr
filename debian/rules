@@ -8,7 +8,6 @@ override_dh_strip:
 	dh_strip --dbg-package=vdr-plugin-avahi4vdr-dbg
 
 override_dh_auto_install:
-	cat /usr/lib/pkgconfig/vdr.pc
 	dh_auto_install --destdir=debian/vdr-plugin-avahi4vdr
 
 %:
