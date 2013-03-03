@@ -29,8 +29,8 @@ TMPDIR ?= /tmp
 ### The compiler options:
 
 export CFLAGS   = $(call PKGCFG,cflags)
-export CXXFLAGS = $(call PKGCFG,cxxflags)
-export LDADD += -lavahi-common -lavahi-client -luuid
+export CXXFLAGS = $(call PKGCFG,cxxflags) $(shell pkg-config --cflags dbus-1) $(shell pkg-config --cflags avahi-client) $(shell pkg-config --cflags uuid)
+export LDADD += $(shell pkg-config --libs dbus-1) $(shell pkg-config --libs avahi-client) $(shell pkg-config --libs uuid)
 
 ### The version number of VDR's plugin API:
 
