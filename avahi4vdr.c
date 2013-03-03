@@ -12,9 +12,11 @@
 #include "avahi-service.h"
 #include "config.h"
 
+#include <dbus/dbus.h>
+
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "9";
+static const char *VERSION        = "10";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -81,6 +83,8 @@ bool cPluginAvahi4vdr::ProcessArgs(int argc, char *argv[])
 bool cPluginAvahi4vdr::Initialize(void)
 {
   // Initialize any background activities the plugin shall perform.
+  if (!dbus_threads_init_default())
+     esyslog("avahi4vdr: dbus_threads_init_default returns an error - not good!");
   cAvahiServicesConfig::_config_file = cString::sprintf("%s/services.conf", cPlugin::ConfigDirectory("avahi4vdr"));
   return true;
 }
