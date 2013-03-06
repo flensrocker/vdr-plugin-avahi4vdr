@@ -1,3 +1,10 @@
+vdr-plugin-avahi4vdr (10-1yavdr0~precise) precise; urgency=medium
+
+  * since the yavdr-vdr has an vdr.pc included
+    it should work with the new Makefile
+
+ -- Lars Hanisch <dvb@flensrocker.de>  Wed, 06 Mar 2013 18:05:10 +0100
+
 vdr-plugin-avahi4vdr (10-0yavdr0~precise) precise; urgency=medium
 
   * new upstream release
