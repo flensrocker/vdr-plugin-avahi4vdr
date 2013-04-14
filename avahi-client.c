@@ -247,4 +247,5 @@ void cAvahiClient::Action(void)
         _simple_poll = NULL;
         Unlock();
         }
+  isyslog("avahi4vdr-client: stopped");
 }
