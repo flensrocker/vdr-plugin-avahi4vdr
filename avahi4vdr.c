@@ -16,7 +16,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "10";
+static const char *VERSION        = "11";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -30,6 +30,14 @@ private:
     if (_avahi_client == NULL)
        _avahi_client = new cAvahiClient();
     return _avahi_client;
+  };
+
+  void DeleteAvahiClient()
+  {
+    if (_avahi_client != NULL) {
+       delete _avahi_client;
+       _avahi_client = NULL;
+       }
   };
 
 public:
@@ -100,6 +108,7 @@ void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
   cAvahiServicesConfig::StopServices(AvahiClient());
+  DeleteAvahiClient();
 }
 
 void cPluginAvahi4vdr::Housekeeping(void)
