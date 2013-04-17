@@ -9,7 +9,7 @@
 
 
 cAvahiClient::cAvahiClient(void)
- :_simple_poll(NULL)
+ :_loop(NULL)
  ,_client(NULL)
  ,_started(false)
 {
@@ -72,8 +72,8 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state, v
 
 void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
 {
-  if (_client != client) {
-     isyslog("avahi4vdr-client: unexpected client callback");
+  if ((_client != NULL) && (_client != client)) {
+     isyslog("avahi4vdr-client: unexpected client callback (%p != %p), state %d", _client, client, state);
      return;
      }
 
@@ -91,7 +91,7 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
     case AVAHI_CLIENT_FAILURE:
      {
       esyslog("avahi4vdr-client: client failure: %s", avahi_strerror(avahi_client_errno(client)));
-      avahi_simple_poll_quit(_simple_poll);
+      g_main_loop_quit(_loop);
       break;
      }
     case AVAHI_CLIENT_S_COLLISION:
@@ -178,8 +178,10 @@ void cAvahiClient::Stop(void)
 {
   Cancel(-1);
   Lock();
-  if (_simple_poll != NULL)
-     avahi_simple_poll_quit(_simple_poll);
+  if (_loop != NULL) {
+     isyslog("avahi4vdr-client: stopping GMainLoop");
+     g_main_loop_quit(_loop);
+     }
   Unlock();
   Cancel(5);
 }
@@ -189,22 +191,28 @@ void cAvahiClient::Action(void)
   _started = true;
   isyslog("avahi4vdr-client: started");
 
+  GMainContext *thread_context = g_main_context_new();
+  g_main_context_push_thread_default(thread_context);
+
+  AvahiGLibPoll *glib_poll = NULL;
   int avahiError = 0;
   int reconnectLogCount = 0;
   while (Running()) {
-        if (_simple_poll == NULL) {
+        if (_loop == NULL) {
            // don't get too verbose...
            if (reconnectLogCount < 5)
-              isyslog("avahi4vdr-client: create simple_poll");
+              isyslog("avahi4vdr-client: create GMainLoop");
            else if (reconnectLogCount > 15) // ...and too quiet
               reconnectLogCount = 0;
 
            Lock();
-           _simple_poll = avahi_simple_poll_new();
-           if (_simple_poll == NULL) {
+           _loop = g_main_loop_new(thread_context, false);
+           if (_loop == NULL) {
               Unlock();
-              esyslog("avahi4vdr-client: error on creating simple_poll");
+              esyslog("avahi4vdr-client: error on creating GMainLoop");
               cCondWait::SleepMs(1000);
+              if (!Running())
+                 break;
               reconnectLogCount++;
               continue;
               }
@@ -220,11 +228,16 @@ void cAvahiClient::Action(void)
               reconnectLogCount = 0;
 
            Lock();
-           _client = avahi_client_new(avahi_simple_poll_get(_simple_poll), (AvahiClientFlags)0, ClientCallback, this, &avahiError);
+           glib_poll = avahi_glib_poll_new(thread_context, G_PRIORITY_DEFAULT);
+           _client = avahi_client_new(avahi_glib_poll_get(glib_poll), (AvahiClientFlags)0, ClientCallback, this, &avahiError);
            if (_client == NULL) {
+              avahi_glib_poll_free(glib_poll);
+              glib_poll = NULL;
               Unlock();
               esyslog("avahi4vdr-client: error on creating client: %s", avahi_strerror(avahiError));
               cCondWait::SleepMs(1000);
+              if (!Running())
+                 break;
               reconnectLogCount++;
               continue;
               }
@@ -232,7 +245,7 @@ void cAvahiClient::Action(void)
            reconnectLogCount = 0;
            }
 
-        avahi_simple_poll_loop(_simple_poll);
+        g_main_loop_run(_loop);
 
         Lock();
         for (cAvahiBrowser *browser = _browsers.First(); browser ; browser = _browsers.Next(browser))
@@ -242,10 +255,16 @@ void cAvahiClient::Action(void)
         if (_client != NULL)
            avahi_client_free(_client);
         _client = NULL;
-        if (_simple_poll != NULL)
-           avahi_simple_poll_free(_simple_poll);
-        _simple_poll = NULL;
+        if (glib_poll != NULL)
+           avahi_glib_poll_free(glib_poll);
+        glib_poll = NULL;
+        if (_loop != NULL)
+           g_main_loop_unref(_loop);
+        _loop = NULL;
         Unlock();
         }
+  g_main_context_pop_thread_default(thread_context);
+  g_main_context_unref(thread_context);
+
   isyslog("avahi4vdr-client: stopped");
 }

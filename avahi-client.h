@@ -4,8 +4,8 @@
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
 #include <avahi-client/publish.h>
-#include <avahi-common/simple-watch.h>
 #include <avahi-common/strlst.h>
+#include <avahi-glib/glib-watch.h>
 
 #include <vdr/thread.h>
 #include <vdr/tools.h>
@@ -20,7 +20,7 @@ friend class cAvahiBrowser;
 friend class cAvahiService;
 
 private:
-  AvahiSimplePoll *_simple_poll;
+  GMainLoop       *_loop;
   AvahiClient     *_client;
   cList<cAvahiBrowser> _browsers;
   cList<cAvahiService> _services;

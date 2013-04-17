@@ -44,8 +44,8 @@ void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex i
 void cAvahiBrowser::BrowserCallback(AvahiServiceBrowser *browser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const char *name,
                      const char *type, const char *domain, AvahiLookupResultFlags flags)
 {
-  if (_browser != browser) {
-     isyslog("avahi4vdr-browser: unexpected browser callback");
+  if ((_browser != NULL) && (_browser != browser)) {
+     isyslog("avahi4vdr-browser: unexpected browser callback (%p != %p)", _browser, browser);
      return;
      }
 
