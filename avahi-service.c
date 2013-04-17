@@ -69,8 +69,8 @@ void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState s
 
 void cAvahiService::GroupCallback(AvahiEntryGroup *group, AvahiEntryGroupState state)
 {
-  if (_group != group) {
-     isyslog("avahi4vdr-service: unexpected group callback");
+  if ((_group != NULL) && (_group != group)) {
+     isyslog("avahi4vdr-service: unexpected group callback (%p != %p), state %d", _group, group, state);
      return;
      }
 

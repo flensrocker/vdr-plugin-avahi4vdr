@@ -21,3 +21,7 @@ VDR Plugin 'avahi4vdr' Revision History
 
 - install helper header
 
+2013-04-17: Version 12
+
+- switch to GLib's GMainLoop
+
