@@ -16,19 +16,20 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "12";
+static const char *VERSION        = "13";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
 class cPluginAvahi4vdr : public cPlugin {
 private:
   // Add any member variables or functions you may need here.
+  bool           _run_loop;
   cAvahiClient  *_avahi_client;
 
   cAvahiClient  *AvahiClient()
   {
     if (_avahi_client == NULL)
-       _avahi_client = new cAvahiClient();
+       _avahi_client = new cAvahiClient(_run_loop);
     return _avahi_client;
   };
 
@@ -68,6 +69,7 @@ cPluginAvahi4vdr::cPluginAvahi4vdr(void)
   // Initialize any member variables here.
   // DON'T DO ANYTHING ELSE THAT MAY HAVE SIDE EFFECTS, REQUIRE GLOBAL
   // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
+  _run_loop = true;
   _avahi_client = NULL;
 }
 
@@ -93,6 +95,13 @@ bool cPluginAvahi4vdr::Initialize(void)
   // Initialize any background activities the plugin shall perform.
   avahi_set_allocator(avahi_glib_allocator());
   cAvahiServicesConfig::_config_file = cString::sprintf("%s/services.conf", cPlugin::ConfigDirectory("avahi4vdr"));
+  cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
+  if (dbus2vdr != NULL) {
+     int replyCode = 0;
+     dbus2vdr->SVDRPCommand("RunsMainLoop", NULL, replyCode);
+     if (replyCode == 900)
+        _run_loop = false;
+     }
   return true;
 }
 
