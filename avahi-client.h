@@ -20,11 +20,15 @@ friend class cAvahiBrowser;
 friend class cAvahiService;
 
 private:
+  bool             _run_loop;
   GMainLoop       *_loop;
   AvahiClient     *_client;
   cList<cAvahiBrowser> _browsers;
   cList<cAvahiService> _services;
   bool _started;
+  cMutex   _loop_mutex;
+  cCondVar _loop_cond;
+  bool     _loop_quit;
 
   cAvahiBrowser *GetBrowser(const char *id) const;
   cAvahiService *GetService(const char *id) const;
@@ -41,7 +45,7 @@ protected:
   virtual void Action(void);
 
 public:
-  cAvahiClient(void);
+  cAvahiClient(bool run_loop);
   virtual ~cAvahiClient(void);
 
   bool  ServerIsRunning(void);
