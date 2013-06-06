@@ -38,6 +38,7 @@ Publish network service
 
 Browse for network services
 ---------------------------
+  // for a real worl example, lookup dbus2vdr in its git
   int replyCode = 0;
   cString browserId;
   cPlugin *avahi4vdr = cPluginManager::GetPlugin("avahi4vdr");
@@ -51,7 +52,7 @@ Browse for network services
   bool cPluginDbus2vdr::Service(const char *Id, void *Data)
   {
     if (strcmp(Id, "avahi4vdr-event") == 0) {
-       cAvahiHelper options(Data);
+       cAvahiHelper options((const char*)Data);
        const char *event = options.Get("event");
        const char *browser_id = options.Get("id");
        if (strcmp(event, "browser-service-resolved") == 0) {
