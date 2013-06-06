@@ -90,9 +90,12 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
       Unlock();
       break;
      }
+    case AVAHI_CLIENT_CONNECTING:
+      //break;
     case AVAHI_CLIENT_FAILURE:
      {
-      esyslog("avahi4vdr-client: client failure: %s", avahi_strerror(avahi_client_errno(client)));
+      if (state == AVAHI_CLIENT_FAILURE)
+         esyslog("avahi4vdr-client: client failure: %s", avahi_strerror(avahi_client_errno(client)));
       if (!_run_loop) {
          cMutexLock MutexLock(&_loop_mutex);
          _loop_quit = true;
@@ -111,8 +114,6 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
       Unlock();
       break;
      }
-    case AVAHI_CLIENT_CONNECTING:
-      break;
     }
 }
 
@@ -246,7 +247,7 @@ void cAvahiClient::Action(void)
 
            Lock();
            glib_poll = avahi_glib_poll_new(thread_context, G_PRIORITY_DEFAULT);
-           _client = avahi_client_new(avahi_glib_poll_get(glib_poll), (AvahiClientFlags)0, ClientCallback, this, &avahiError);
+           _client = avahi_client_new(avahi_glib_poll_get(glib_poll), AVAHI_CLIENT_NO_FAIL, ClientCallback, this, &avahiError);
            if (_client == NULL) {
               avahi_glib_poll_free(glib_poll);
               glib_poll = NULL;
