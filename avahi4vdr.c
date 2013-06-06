@@ -16,7 +16,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "13";
+static const char *VERSION        = "14";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -26,7 +26,7 @@ private:
   bool           _run_loop;
   cAvahiClient  *_avahi_client;
 
-  cAvahiClient  *AvahiClient()
+  cAvahiClient  *CreateAvahiClient()
   {
     if (_avahi_client == NULL)
        _avahi_client = new cAvahiClient(_run_loop);
@@ -108,14 +108,14 @@ bool cPluginAvahi4vdr::Initialize(void)
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  cAvahiServicesConfig::StartServices(AvahiClient());
+  cAvahiServicesConfig::StartServices(CreateAvahiClient());
   return true;
 }
 
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
-  cAvahiServicesConfig::StopServices(AvahiClient());
+  cAvahiServicesConfig::StopServices(_avahi_client);
   DeleteAvahiClient();
 }
 
@@ -163,6 +163,10 @@ bool cPluginAvahi4vdr::SetupParse(const char *Name, const char *Value)
 bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
 {
   // Handle custom service requests from other plugins
+  if ((Id != NULL) && (strcmp(Id, "dbus2vdr-MainLoopStopped") == 0)) {
+     Stop();
+     return true;
+     }
   return false;
 }
 
@@ -183,11 +187,17 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
   if ((Command == NULL) || (Option == NULL))
      return NULL;
 
+  if (_avahi_client == NULL) {
+     esyslog("avahi4vdr: no avahi client!");
+     ReplyCode = 451;
+     return "";
+     }
+
   cAvahiHelper options(Option);
 
   if (strcmp(Command, "ReloadServices") == 0) {
-     cAvahiServicesConfig::StopServices(AvahiClient());
-     cAvahiServicesConfig::StartServices(AvahiClient());
+     cAvahiServicesConfig::StopServices(_avahi_client);
+     cAvahiServicesConfig::StartServices(_avahi_client);
      ReplyCode = 900;
      return "services.conf reloaded";
      }
@@ -242,7 +252,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      ReplyCode = 900;
-     cString id = AvahiClient()->CreateService(caller, name, protocol, type, port, subtypes, txts);
+     cString id = _avahi_client->CreateService(caller, name, protocol, type, port, subtypes, txts);
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteService") == 0) {
@@ -254,7 +264,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      ReplyCode = 900;
-     AvahiClient()->DeleteService(id);
+     _avahi_client->DeleteService(id);
      return cString::sprintf("message=deleted service with id %s", id);
      }
   else if (strcmp(Command, "CreateBrowser") == 0) {
@@ -285,7 +295,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      ReplyCode = 900;
-     cString id = AvahiClient()->CreateBrowser(caller, protocol, type, ignore_local);
+     cString id = _avahi_client->CreateBrowser(caller, protocol, type, ignore_local);
      return cString::sprintf("id=%s", *id);
      }
   else if (strcmp(Command, "DeleteBrowser") == 0) {
@@ -297,7 +307,7 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
         }
 
      ReplyCode = 900;
-     AvahiClient()->DeleteBrowser(id);
+     _avahi_client->DeleteBrowser(id);
      return cString::sprintf("message=deleted browser with id %s", id);
      }
 
