@@ -1,3 +1,9 @@
+vdr-plugin-avahi4vdr (14-0yavdr0~precise) precise; urgency=medium
+
+  * new upstream release
+
+ -- Lars Hanisch <dvb@flensrocker.de>  Fri, 07 Jun 2013 08:14:34 +0200
+
 vdr-plugin-avahi4vdr (13-0yavdr0~precise) precise; urgency=medium
 
   * new upstream release
