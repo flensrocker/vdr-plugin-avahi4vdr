@@ -1,0 +1,11 @@
+description     "trigger avahi4vdr on shutdown"
+
+start on runlevel [06] and stopping avahi-daemon
+
+task
+
+script
+  /usr/bin/logger -t avahi4vdr trigger shutdown on vdr-plugin avahi4vdr
+  /usr/bin/dbus-send --system --type=method_call --dest=de.tvdr.vdr /Plugins/avahi4vdr de.tvdr.vdr.plugin.SVDRPCommand string:'Shutdown' string:''
+end script
+
