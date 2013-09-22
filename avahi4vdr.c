@@ -310,6 +310,11 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      _avahi_client->DeleteBrowser(id);
      return cString::sprintf("message=deleted browser with id %s", id);
      }
+  else if (strcmp(Command, "Shutdown") == 0) {
+     Stop();
+     ReplyCode = 900;
+     return "avahi4vdr has been stopped";
+     }
 
   ReplyCode = 500;
   return NULL;
