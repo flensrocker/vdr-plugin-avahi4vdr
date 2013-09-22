@@ -185,6 +185,12 @@ void cAvahiClient::DeleteService(const char *id)
 
 void cAvahiClient::Stop(void)
 {
+  Lock();
+  for (cAvahiBrowser *browser = _browsers.First(); browser ; browser = _browsers.Next(browser))
+      browser->Delete();
+  for (cAvahiService *service = _services.First(); service ; service = _services.Next(service))
+      service->Delete();
+  Unlock();
   Cancel(-1);
   Lock();
   if (!_run_loop) {
@@ -278,6 +284,10 @@ void cAvahiClient::Action(void)
            g_main_loop_run(_loop);
 
         Lock();
+        if (_loop != NULL) {
+           g_main_loop_unref(_loop);
+           _loop = NULL;
+           }
         for (cAvahiBrowser *browser = _browsers.First(); browser ; browser = _browsers.Next(browser))
             browser->Delete();
         for (cAvahiService *service = _services.First(); service ; service = _services.Next(service))
@@ -289,10 +299,6 @@ void cAvahiClient::Action(void)
         if (glib_poll != NULL) {
            avahi_glib_poll_free(glib_poll);
            glib_poll = NULL;
-           }
-        if (_loop != NULL) {
-           g_main_loop_unref(_loop);
-           _loop = NULL;
            }
         Unlock();
         }
