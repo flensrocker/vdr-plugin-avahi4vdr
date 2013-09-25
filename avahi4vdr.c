@@ -109,13 +109,13 @@ bool cPluginAvahi4vdr::Initialize(void)
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
+  cAvahiServicesConfig::StartServices(CreateAvahiClient());
+
   cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
   if (dbus2vdr != NULL) {
      int replyCode = 0;
      _watch_id = dbus2vdr->SVDRPCommand("WatchBusname", "caller=avahi4vdr,busname=system,watch=org.freedesktop.Avahi", replyCode);
      }
-  else
-    cAvahiServicesConfig::StartServices(CreateAvahiClient());
   return true;
 }
 
@@ -134,6 +134,7 @@ void cPluginAvahi4vdr::Stop(void)
            }
         }
      }
+
   cAvahiServicesConfig::StopServices(_avahi_client);
   DeleteAvahiClient();
 }
