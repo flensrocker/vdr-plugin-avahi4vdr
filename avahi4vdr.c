@@ -25,6 +25,7 @@ private:
   // Add any member variables or functions you may need here.
   bool           _run_loop;
   cAvahiClient  *_avahi_client;
+  cString        _watch_id;
 
   cAvahiClient  *CreateAvahiClient()
   {
@@ -108,13 +109,31 @@ bool cPluginAvahi4vdr::Initialize(void)
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  cAvahiServicesConfig::StartServices(CreateAvahiClient());
+  cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
+  if (dbus2vdr != NULL) {
+     int replyCode = 0;
+     _watch_id = dbus2vdr->SVDRPCommand("WatchBusname", "caller=avahi4vdr,busname=system,watch=org.freedesktop.Avahi", replyCode);
+     }
+  else
+    cAvahiServicesConfig::StartServices(CreateAvahiClient());
   return true;
 }
 
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
+  if (*_watch_id) {
+     cAvahiHelper options(*_watch_id);
+     const char *id = options.Get("id");
+     if (id != NULL) {
+        cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
+        if (dbus2vdr != NULL) {
+           int replyCode = 0;
+           cString data = cString::sprintf("busname=system,id=%s", id);
+           dbus2vdr->SVDRPCommand("UnwatchBusname", *data, replyCode);
+           }
+        }
+     }
   cAvahiServicesConfig::StopServices(_avahi_client);
   DeleteAvahiClient();
 }
@@ -165,6 +184,20 @@ bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
   // Handle custom service requests from other plugins
   if ((Id != NULL) && (strcmp(Id, "dbus2vdr-MainLoopStopped") == 0)) {
      Stop();
+     return true;
+     }
+  else if (strcmp(Id, "dbus2vdr-event") == 0) {
+     isyslog("avahi4vdr: dbus2vdr-event: %s", (const char*)Data);
+     cAvahiHelper options((const char*)Data);
+     const char *event = options.Get("event");
+     const char *watch_id = options.Get("id");
+     if (strcmp(event, "watched-name-appeared") == 0) {
+        cAvahiServicesConfig::StartServices(CreateAvahiClient());
+        }
+     else if (strcmp(event, "watched-name-vanished") == 0) {
+        cAvahiServicesConfig::StopServices(_avahi_client);
+        DeleteAvahiClient();
+        }
      return true;
      }
   return false;
@@ -309,11 +342,6 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
      ReplyCode = 900;
      _avahi_client->DeleteBrowser(id);
      return cString::sprintf("message=deleted browser with id %s", id);
-     }
-  else if (strcmp(Command, "Shutdown") == 0) {
-     Stop();
-     ReplyCode = 900;
-     return "avahi4vdr has been stopped";
      }
 
   ReplyCode = 500;
