@@ -24,6 +24,7 @@ class cPluginAvahi4vdr : public cPlugin {
 private:
   // Add any member variables or functions you may need here.
   bool           _run_loop;
+  cMutex         _client_mutex;
   cAvahiClient  *_avahi_client;
   cString        _watch_id;
 
@@ -109,12 +110,19 @@ bool cPluginAvahi4vdr::Initialize(void)
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  cAvahiServicesConfig::StartServices(CreateAvahiClient());
+  _client_mutex.Lock();
+  if (_avahi_client == NULL)
+     cAvahiServicesConfig::StartServices(CreateAvahiClient());
+  _client_mutex.Unlock();
 
   cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
   if (dbus2vdr != NULL) {
      int replyCode = 0;
-     _watch_id = dbus2vdr->SVDRPCommand("WatchBusname", "caller=avahi4vdr,busname=system,watch=org.freedesktop.Avahi", replyCode);
+     cString message = dbus2vdr->SVDRPCommand("WatchBusname", "caller=avahi4vdr,busname=system,watch=org.freedesktop.Avahi", replyCode);
+     if (*message != NULL) {
+        cAvahiHelper options(*message);
+        _watch_id = options.Get("id");
+        }
      }
   return true;
 }
@@ -123,20 +131,20 @@ void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
   if (*_watch_id) {
-     cAvahiHelper options(*_watch_id);
-     const char *id = options.Get("id");
-     if (id != NULL) {
-        cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
-        if (dbus2vdr != NULL) {
-           int replyCode = 0;
-           cString data = cString::sprintf("busname=system,id=%s", id);
-           dbus2vdr->SVDRPCommand("UnwatchBusname", *data, replyCode);
-           }
+     cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
+     if (dbus2vdr != NULL) {
+        int replyCode = 0;
+        cString data = cString::sprintf("busname=system,id=%s", *_watch_id);
+        dbus2vdr->SVDRPCommand("UnwatchBusname", *data, replyCode);
         }
      }
 
-  cAvahiServicesConfig::StopServices(_avahi_client);
-  DeleteAvahiClient();
+  _client_mutex.Lock();
+  if (_avahi_client != NULL) {
+     cAvahiServicesConfig::StopServices(_avahi_client);
+     DeleteAvahiClient();
+     }
+  _client_mutex.Unlock();
 }
 
 void cPluginAvahi4vdr::Housekeeping(void)
@@ -192,14 +200,23 @@ bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
      cAvahiHelper options((const char*)Data);
      const char *event = options.Get("event");
      const char *watch_id = options.Get("id");
-     if (strcmp(event, "watched-name-appeared") == 0) {
-        cAvahiServicesConfig::StartServices(CreateAvahiClient());
+     if ((watch_id != NULL) && (*_watch_id != NULL) && (strcmp(watch_id, _watch_id) == 0)) {
+        if (strcmp(event, "watched-name-appeared") == 0) {
+           _client_mutex.Lock();
+           if (_avahi_client == NULL)
+              cAvahiServicesConfig::StartServices(CreateAvahiClient());
+           _client_mutex.Unlock();
+           }
+        else if (strcmp(event, "watched-name-vanished") == 0) {
+           _client_mutex.Lock();
+           if (_avahi_client != NULL) {
+              cAvahiServicesConfig::StopServices(_avahi_client);
+              DeleteAvahiClient();
+              }
+           _client_mutex.Unlock();
+           }
+        return true;
         }
-     else if (strcmp(event, "watched-name-vanished") == 0) {
-        cAvahiServicesConfig::StopServices(_avahi_client);
-        DeleteAvahiClient();
-        }
-     return true;
      }
   return false;
 }
@@ -221,6 +238,9 @@ cString cPluginAvahi4vdr::SVDRPCommand(const char *Command, const char *Option, 
   if ((Command == NULL) || (Option == NULL))
      return NULL;
 
+  cMutexLock MutexLock(&_client_mutex);
+  if (_avahi_client == NULL)
+     cAvahiServicesConfig::StartServices(CreateAvahiClient());
   if (_avahi_client == NULL) {
      esyslog("avahi4vdr: no avahi client!");
      ReplyCode = 451;
