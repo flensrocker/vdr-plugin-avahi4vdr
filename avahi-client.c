@@ -91,7 +91,8 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
       break;
      }
     case AVAHI_CLIENT_CONNECTING:
-      //break;
+      dsyslog("avahi4vdr-client: client connecting...");
+      break;
     case AVAHI_CLIENT_FAILURE:
      {
       if (state == AVAHI_CLIENT_FAILURE)
@@ -126,7 +127,7 @@ void  cAvahiClient::NotifyCaller(const char *caller, const char *event, const ch
      return;
   cString call = cString::sprintf("event=%s,id=%s%s%s", event, id, (data != NULL ? "," : ""), (data != NULL ? data : ""));
   plugin->Service("avahi4vdr-event", (void*)(*call));
-  isyslog("avahi4vdr-client: notify %s on event %s", caller, *call);
+  isyslog("avahi4vdr-client: notified %s on event %s", caller, *call);
 }
 
 cString cAvahiClient::CreateBrowser(const char *caller, AvahiProtocol protocol, const char *type, bool ignore_local)
