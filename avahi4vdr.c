@@ -97,6 +97,7 @@ bool cPluginAvahi4vdr::Initialize(void)
   // Initialize any background activities the plugin shall perform.
   avahi_set_allocator(avahi_glib_allocator());
   cAvahiServicesConfig::_config_file = cString::sprintf("%s/services.conf", cPlugin::ConfigDirectory("avahi4vdr"));
+
   cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
   if (dbus2vdr != NULL) {
      int replyCode = 0;
@@ -123,7 +124,7 @@ bool cPluginAvahi4vdr::Start(void)
   else {
      _client_mutex.Lock();
      if (_avahi_client == NULL)
-        cAvahiServicesConfig::StartServices(CreateAvahiClient());
+        cAvahiServicesConfig::StartServices(CreateAvahiClient()->Run());
      _client_mutex.Unlock();
      }
   return true;
@@ -206,7 +207,7 @@ bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
         if (strcmp(event, "watched-name-appeared") == 0) {
            _client_mutex.Lock();
            if (_avahi_client == NULL)
-              cAvahiServicesConfig::StartServices(CreateAvahiClient());
+              cAvahiServicesConfig::StartServices(CreateAvahiClient()->Run());
            _client_mutex.Unlock();
            }
         else if (strcmp(event, "watched-name-vanished") == 0) {

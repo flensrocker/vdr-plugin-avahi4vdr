@@ -15,9 +15,6 @@ cAvahiClient::cAvahiClient(bool run_loop)
  ,_started(false)
  ,_loop_quit(false)
 {
-  Start();
-  while (!_started)
-        cCondWait::SleepMs(10);
 }
 
 cAvahiClient::~cAvahiClient(void)
@@ -187,6 +184,13 @@ void cAvahiClient::DeleteService(const char *id)
   Unlock();
 }
 
+void cAvahiClient::Run(void)
+{
+  Start();
+  while (!_started)
+        cCondWait::SleepMs(10);
+}
+
 void cAvahiClient::Stop(void)
 {
   Lock();
@@ -317,5 +321,6 @@ void cAvahiClient::Action(void)
      g_main_context_unref(thread_context);
      }
 
+  _started = false;
   isyslog("avahi4vdr-client: stopped");
 }
