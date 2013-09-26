@@ -110,10 +110,6 @@ bool cPluginAvahi4vdr::Initialize(void)
 bool cPluginAvahi4vdr::Start(void)
 {
   // Start any background activities the plugin shall perform.
-  _client_mutex.Lock();
-  if (_avahi_client == NULL)
-     cAvahiServicesConfig::StartServices(CreateAvahiClient());
-  _client_mutex.Unlock();
 
   cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
   if (dbus2vdr != NULL) {
@@ -123,6 +119,12 @@ bool cPluginAvahi4vdr::Start(void)
         cAvahiHelper options(*message);
         _watch_id = options.Get("id");
         }
+     }
+  else {
+     _client_mutex.Lock();
+     if (_avahi_client == NULL)
+        cAvahiServicesConfig::StartServices(CreateAvahiClient());
+     _client_mutex.Unlock();
      }
   return true;
 }
