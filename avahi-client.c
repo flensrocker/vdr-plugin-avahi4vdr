@@ -102,8 +102,11 @@ void cAvahiClient::ClientCallback(AvahiClient *client, AvahiClientState state)
          _loop_quit = true;
          _loop_cond.Broadcast();
          }
-      else if (_loop != NULL)
+      else if (_loop != NULL) {
+         cMutexLock MutexLock(&_loop_mutex);
+         _loop_quit = true;
          g_main_loop_quit(_loop);
+         }
       break;
      }
     case AVAHI_CLIENT_S_COLLISION:
@@ -202,6 +205,8 @@ void cAvahiClient::Stop(void)
      }
   else if (_loop != NULL) {
      isyslog("avahi4vdr-client: stopping GMainLoop");
+     cMutexLock MutexLock(&_loop_mutex);
+     _loop_quit = true;
      g_main_loop_quit(_loop);
      }
   Unlock();
@@ -254,19 +259,23 @@ void cAvahiClient::Action(void)
 
            Lock();
            glib_poll = avahi_glib_poll_new(thread_context, G_PRIORITY_DEFAULT);
-           _client = avahi_client_new(avahi_glib_poll_get(glib_poll), AVAHI_CLIENT_NO_FAIL, ClientCallback, this, &avahiError);
+           _client = avahi_client_new(avahi_glib_poll_get(glib_poll), (AvahiClientFlags)0 /*AVAHI_CLIENT_NO_FAIL*/, ClientCallback, this, &avahiError);
            if (_client == NULL) {
               avahi_glib_poll_free(glib_poll);
               glib_poll = NULL;
               Unlock();
               esyslog("avahi4vdr-client: error on creating client: %s", avahi_strerror(avahiError));
               cCondWait::SleepMs(1000);
-              if (!Running())
-                 break;
-              reconnectLogCount++;
-              continue;
+              _loop_mutex.Lock();
+              bool should_quit = _loop_quit;
+              _loop_mutex.Unlock();
+              if (Running() && !should_quit) {
+                 reconnectLogCount++;
+                 continue;
+                 }
               }
-           Unlock();
+           else
+              Unlock();
            reconnectLogCount = 0;
            }
 
