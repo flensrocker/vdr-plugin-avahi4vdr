@@ -123,8 +123,10 @@ bool cPluginAvahi4vdr::Start(void)
      }
   else {
      _client_mutex.Lock();
-     if (_avahi_client == NULL)
-        cAvahiServicesConfig::StartServices(CreateAvahiClient()->Run());
+     if (_avahi_client == NULL) {
+        CreateAvahiClient()->Run();
+        cAvahiServicesConfig::StartServices(_avahi_client);
+        }
      _client_mutex.Unlock();
      }
   return true;
@@ -206,8 +208,10 @@ bool cPluginAvahi4vdr::Service(const char *Id, void *Data)
      if ((watch_id != NULL) && (*_watch_id != NULL) && (strcmp(watch_id, _watch_id) == 0)) {
         if (strcmp(event, "watched-name-appeared") == 0) {
            _client_mutex.Lock();
-           if (_avahi_client == NULL)
-              cAvahiServicesConfig::StartServices(CreateAvahiClient()->Run());
+           if (_avahi_client == NULL) {
+              CreateAvahiClient()->Run();
+              cAvahiServicesConfig::StartServices(_avahi_client);
+              }
            _client_mutex.Unlock();
            }
         else if (strcmp(event, "watched-name-vanished") == 0) {
