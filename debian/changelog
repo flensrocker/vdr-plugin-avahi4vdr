@@ -1,6 +1,6 @@
-vdr-plugin-avahi4vdr (15-git1-0yavdr0~precise) precise; urgency=medium
+vdr-plugin-avahi4vdr (16-0yavdr0~precise) precise; urgency=medium
 
-  * new upstream snapshot
+  * new upstream release
 
  -- Lars Hanisch <dvb@flensrocker.de>  Wed, 25 Sep 2013 23:11:14 +0200
 
