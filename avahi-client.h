@@ -56,6 +56,7 @@ public:
   cString CreateService(const char *caller, const char *name, AvahiProtocol protocol, const char *type, int port, const cStringList& subtypes, const cStringList& txts);
   void    DeleteService(const char *id);
 
+  void Run(void);
   void Stop(void);
 };
 
