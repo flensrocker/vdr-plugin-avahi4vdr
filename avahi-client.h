@@ -30,8 +30,10 @@ private:
   cCondVar _loop_cond;
   bool     _loop_quit;
 
-  cAvahiBrowser *GetBrowser(const char *id) const;
-  cAvahiService *GetService(const char *id) const;
+  const cAvahiBrowser *GetBrowser(const char *id) const;
+  cAvahiBrowser *GetBrowser(const char *id);
+  const cAvahiService *GetService(const char *id) const;
+  cAvahiService *GetService(const char *id);
 
   void  BrowserError(cAvahiBrowser *browser);
   void  ServiceError(cAvahiService *service);
