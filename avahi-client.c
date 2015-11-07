@@ -24,24 +24,34 @@ cAvahiClient::~cAvahiClient(void)
   _services.Clear();
 }
 
-cAvahiBrowser *cAvahiClient::GetBrowser(const char *id) const
+const cAvahiBrowser *cAvahiClient::GetBrowser(const char *id) const
 {
   if (id == NULL)
      return NULL;
-  cAvahiBrowser *browser = _browsers.First();
+  const cAvahiBrowser *browser = _browsers.First();
   while ((browser != NULL) && (strcmp(*browser->Id(), id) != 0))
         browser = _browsers.Next(browser);
   return browser;
 }
 
-cAvahiService *cAvahiClient::GetService(const char *id) const
+cAvahiBrowser *cAvahiClient::GetBrowser(const char *id)
+{
+  return const_cast<cAvahiBrowser *>(GetBrowser(id));
+}
+
+const cAvahiService *cAvahiClient::GetService(const char *id) const
 {
   if (id == NULL)
      return NULL;
-  cAvahiService *service = _services.First();
+  const cAvahiService *service = _services.First();
   while ((service != NULL) && (strcmp(*service->Id(), id) != 0))
         service = _services.Next(service);
   return service;
+}
+
+cAvahiService *cAvahiClient::GetService(const char *id)
+{
+  return const_cast<cAvahiService *>(GetService(id));
 }
 
 void  cAvahiClient::BrowserError(cAvahiBrowser *browser)
