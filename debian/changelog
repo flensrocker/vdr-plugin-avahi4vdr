@@ -1,3 +1,9 @@
+vdr-plugin-avahi4vdr (17-0yavdr0~trusty) trusty; urgency=medium
+
+  * make compatible with vdr 2.3.1
+
+ -- Lars Hanisch <dvb@flensrocker.de>  Sat, 07 Nov 2015 15:01:10 +0100
+
 vdr-plugin-avahi4vdr (16-0yavdr0~precise) precise; urgency=medium
 
   * new upstream release
