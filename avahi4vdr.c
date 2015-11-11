@@ -16,7 +16,7 @@
 
 #include <vdr/plugin.h>
 
-static const char *VERSION        = "17";
+static const char *VERSION        = "18";
 static const char *DESCRIPTION    = trNOOP("publish and browse for network services");
 static const char *MAINMENUENTRY  = NULL;
 
@@ -135,14 +135,16 @@ bool cPluginAvahi4vdr::Start(void)
 void cPluginAvahi4vdr::Stop(void)
 {
   // Stop any background activities the plugin is performing.
-  if (*_watch_id) {
-     cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
-     if (dbus2vdr != NULL) {
-        int replyCode = 0;
-        cString data = cString::sprintf("busname=system,id=%s", *_watch_id);
-        dbus2vdr->SVDRPCommand("UnwatchBusname", *data, replyCode);
-        }
-     }
+
+  // We're going to stop and dbus2vdr may be gone already, so what...
+  //if (*_watch_id) {
+  //   cPlugin *dbus2vdr = cPluginManager::GetPlugin("dbus2vdr");
+  //   if (dbus2vdr != NULL) {
+  //      int replyCode = 0;
+  //      cString data = cString::sprintf("busname=system,id=%s", *_watch_id);
+  //      dbus2vdr->SVDRPCommand("UnwatchBusname", *data, replyCode);
+  //      }
+  //   }
 
   _client_mutex.Lock();
   if (_avahi_client != NULL) {
